@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "build-docs": "jsdoc -c jsdoc.json"
   },
   "dependencies": {
     "bcrypt-nodejs": "0.0.3",
@@ -17,6 +18,8 @@
     "mongoose": "^5.5.0"
   },
   "devDependencies": {
+    "jsdoc": "^3.6.1",
+    "jsdoc-http-plugin": "^0.3.0",
     "nodemon": "^1.18.11"
   },
   "author": "Tey García Miranda",

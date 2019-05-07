@@ -11,10 +11,11 @@ function isAuth(req, res, next){
   //El header contiene el token después del espacio
   const token = req.headers.authorization.split(' ')[1]
   
+  //Decodifica y valida el token
   services.decodeToken(token)
     .then(response => {
-      req.user = response
-      next()
+      req.user = response//Almacenamos la resolución de la promesa en req.user
+      next()//Pasamos al siguiente middleware (ruta solicitada)
     })
     .catch(response => {
       res.status(response.status)

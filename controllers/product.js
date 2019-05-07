@@ -1,3 +1,7 @@
+/**
+ * @fileOverview Routes for product's management
+ * @author Tey García
+ */
 'use strict'
 const Product = require('../models/product')
 
@@ -16,6 +20,14 @@ function getProduct(req, res){
   })
 }
 
+/**
+ * Method for get the list of products available on database
+ * 
+ * @param {{}} req HTTP user's request
+ * @param {{}} res HTTP response to be send to user
+ * 
+ * @returns { {status: number, message: String, products: Product[]} } HTTP status, data and message
+ */
 function getProducts(req, res){
   Product.find({}, (err, products) => {
 
