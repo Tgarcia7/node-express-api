@@ -1,14 +1,13 @@
-'use strict'
-const mongoose = require('mongoose')
-const app = require('./app')
-const config = require('./config')
+import http from 'http'
+import config from './config.js'
+import app from './app.js'
+import db from './models/db.js'
 
-mongoose.connect(config.db, { useNewUrlParser: true }, (err, res) => {
-  if(err){
-    return console.log(`No fue posible conectar con la DB. Error: ${err}`)
-  }
+const server = http.createServer(app)
 
-  app.listen(config.port, () => {
-    console.log(`API REST corriendo en http://localhost:${config.port}`)
-  })
+app.listen(config.PORT, async () => {
+  await db.init()
+  console.info(`API initialized, listening on port: ${config.PORT}`)
 })
+
+export default server

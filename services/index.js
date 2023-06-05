@@ -1,46 +1,41 @@
-'use strict'
+import jwt from 'jsonwebtoken'
+import moment from 'moment'
+import config from '../config.js'
 
-const jwt = require('jwt-simple')
-const moment = require('moment')//manejo de fechas en js
-const config = require('../config')
+function createToken(user) {
+  user.admin = !!user.admin 
 
-function createToken(user){
   const payload = {
-    sub: user._id,
-    iat: moment().unix(),//fecha de creación del token
-    exp: moment().add(14, 'days').unix()//fecha de expiración del token
+    sub: { 
+      userId: user._id, 
+      name: user.name, 
+      email: user.email,
+      admin: user.admin 
+    },
+    iat: moment().unix(),
+    exp: moment().add(15, 'minutes').unix()
   }
 
-  return jwt.encode(payload, config.SECRET_TOKEN)
+  return jwt.sign(payload, config.SECRET_TOKEN)
 }
 
-function decodeToken(token){
+function decodeToken(token) {
   const decoded = new Promise((resolve, reject) => {
-    try{
-      //Decodifica el token que envió el cliente en la petición
-      const payload = jwt.decode(token, config.SECRET_TOKEN)
+    try {
+      const payload = jwt.verify(token, config.SECRET_TOKEN)
 
-      //Validación del token
-      //Compara la expiración del token que nos envía con la fecha actual
-      if(payload.exp <= moment().unix()){
-        reject({
-          status: 401,
-          message: `El token ha expirado`
-        })
-      }
       resolve(payload.sub)
-    }catch(err){
-      reject({
-        status: 500,
-        message: 'Invalid token'
-      })
+    } catch (err) {
+      const errorCode = err.name === 'TokenExpiredError' ? 401 : 500
+
+      reject({ status: errorCode, message: err.name })
     }
   })
 
   return decoded
 }
 
-module.exports = {
+export default {
   createToken,
   decodeToken
 }

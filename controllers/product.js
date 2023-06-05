@@ -1,92 +1,89 @@
-/**
- * @fileOverview Routes for product's management
- * @author Tey García
- */
-'use strict'
-const Product = require('../models/product')
+import { ObjectId } from 'mongodb'
+import Product from '../models/product.js'
 
-function getProduct(req, res){
-  let productId = req.params.productId
+async function getProduct(req, res) {
+  let product
+  const filter = { '_id': new ObjectId(req.params.productId) }
 
-  Product.findOne(productId, (err, product) => {
-    if(err){
-      return res.status(500).send({message: `Error al realizar la petición: ${err}`})
-    }
-    if(!product){
-      return res.status(404).send({message: `El producto no existe`})
-    }
+  try {
+    product = await Product.findOne(filter)
+    if (!product) return res.status(404).send({ message: 'Not found' })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send({ message: 'Error obtaining the product' })
+  }
 
-    res.status(200).send({product})//la key y variable se llaman igual entonces se puede poner así
-  })
+  res.status(200).send(product)
 }
 
-/**
- * Method for get the list of products available on database
- * 
- * @param {{}} req HTTP user's request
- * @param {{}} res HTTP response to be send to user
- * 
- * @returns { {status: number, message: String, products: Product[]} } HTTP status, data and message
- */
-function getProducts(req, res){
-  Product.find({}, (err, products) => {
+async function getProducts(req, res) {
+  let products 
 
-    if(err){
-      return res.status(500).send({message: `Error al realizar la petición: ${err}`})
-    }
+  try {
+    products = await Product.find({})
+    if (!products) return res.status(404).send({ message: 'Not found' })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send({ message: 'Error obtaining the products' })
+  }
 
-    if(!products){
-      return res.status(404).send({message: `No existen productos`})
-    }
-
-    res.status(200).send({products})
-  })
+  res.status(200).send(products)
 }
 
-function saveProduct(req, res){
-  console.log('POST /api/product')
-  console.log(req.body)
-
-  let product = new Product()
-  product.name = req.body.name
-  product.picture = req.body.picture
-  product.price = req.body.price
-  product.category = req.body.category
-  product.description = req.body.description
-
-  product.save((err, productStored) => {
-    if(err) {
-      res.status(500).send({message: `Error al salvar el producto en la bd ${err}`})
-    }
-    res.status(200).send({product: productStored})
+async function saveProduct(req, res) {
+  const product = new Product({
+    name: req.body.name,
+    picture: req.body.picture,
+    price: req.body.price,
+    category: req.body.category,
+    description: req.body.description
   })
+
+  try {
+    await product.save()
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send({ message: 'Error saving the product' })
+  }
+
+  res.status(201).send(product)
 }
 
-function updateProduct(req, res){
-  let productId = req.params.productId
-  let update = req.body
+async function updateProduct(req, res) {
+  const filter = { '_id': new ObjectId(req.params.productId) }
+  const product = {
+    name: req.body.name,
+    picture: req.body.picture,
+    price: req.body.price,
+    category: req.body.category,
+    description: req.body.description
+  }
+  let result
 
-  Product.findOneAndUpdate(productId, update, (err, productUpdated) => {
-    if(err) {res.status(500).send({message: `Error al actualizar el producto ${err}`})}
-    
-    res.status(200).send({product: productUpdated})
-  })
+  try {
+    result = await Product.findOneAndUpdate(filter, product)
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send({ message: 'Error updating the product' })
+  }
+
+  res.status(200).send(result)
 }
 
-function deleteProduct(req, res){
-  let productId = req.params.productId
+async function deleteProduct(req, res) {
+  const filter = { '_id': new ObjectId(req.params.productId) }
 
-  Product.findOneAndDelete(productId, (err, product) => {
-    if(err){ res.status(500).send({message: `Error al borrar el producto ${err}`}) }
+  try {
+    await Product.findOneAndDelete(filter)
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send({ message: 'Error deleting the product' })
+  }
 
-    product.remove(err => {
-      res.status(200).send({message: `El producto ha sido eliminado`})
-    })
-
-  })
+  res.status(200).send({ message: 'Deleted' })
 }
 
-module.exports = {
+export default {
   getProduct,
   getProducts,
   saveProduct,

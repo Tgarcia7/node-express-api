@@ -1,25 +1,22 @@
-'use strict'
+import services from '../services/index.js'
 
-const services = require('../services')
-
-function isAuth(req, res, next){
-  if(!req.headers.authorization){
-    //Acceso prohibido (no tiene autorización en el header)
-    return res.status(403).send({message: `No tienes autorización`})
+function isAuth(req, res, next) {
+  if (!req.headers.authorization) {
+    return res.status(401).send({ message: 'Unauthorized' })
   }
 
-  //El header contiene el token después del espacio
+  // Extract token from headers
   const token = req.headers.authorization.split(' ')[1]
-  
-  //Decodifica y valida el token
+
+  // Decodes and validates the token
   services.decodeToken(token)
     .then(response => {
-      req.user = response//Almacenamos la resolución de la promesa en req.user
-      next()//Pasamos al siguiente middleware (ruta solicitada)
+      req.user = response
+      next()
     })
     .catch(response => {
-      res.status(response.status)
+      res.status(response.status).send({ message: response.message })
     })
-  }
+}
 
-module.exports = isAuth
+export default isAuth

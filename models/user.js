@@ -1,42 +1,59 @@
-'use strict'
+import mongoose from 'mongoose'
+import bcrypt from 'bcrypt'
 
-const mongoose = require('mongoose')
+const SALT_ROUNDS = 8
 const Schema = mongoose.Schema
-const bcrypt = require('bcrypt-nodejs')
-const crypto = require('crypto')
 
 const UserSchema = new Schema({
-  email: { type: String, unique: true, lowercase: true},
-  displayName: String, 
-  avatar: String, 
-  password: {type: String, select: false},//no devuelve la contraseña al traer el objeto de la bd
-  signupDate: {type: Date, default: Date.now()},
+  email: { type: String, unique: true, lowercase: true },
+  displayName: String,
+  avatar: String,
+  password: { type: String, select: false },
+  signupDate: { type: Date, default: Date.now() },
   lastLogin: Date
 })
 
-UserSchema.pre('save', (next) => {
-  let user = this
-  // if(!user.isModified('password')){
-  //   return next()
-  // }
+UserSchema.pre('save', async function(next) {
+  const user = this
 
-  bcrypt.genSalt(10, (err, salt) => {
-    if(err) return next(err)
+  if (!user.isModified('password')) return next()
 
-    bcrypt.hash(user.password, salt, null, (err, hash) => {
-      if(err) return next(err)
+  try {
+    user.password = await hashPassword(user.password)
+    next()
+  } catch (error) {
+    return error
+  }
+})
 
-      user.password = hash
-      next()
+UserSchema.pre('updateOne', async function(next) {
+  const user = this._update
+  
+  if (user && !user.password) return next()
+
+  try {
+    user.password = await hashPassword(user.password)
+    next()
+  } catch (error) {
+    return error
+  }
+})
+
+function hashPassword(password) {
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, SALT_ROUNDS, function(err, hash) {
+      if (err) return reject(err)
+  
+      resolve(hash)
     })
   })
-})//Se ejecuta antes de guardar el objeto
+}
 
-UserSchema.methods.gravatar = function () {
-  if(!this.email) return 'https://gravatar.com/avatar/?s=200&d=retro'
+UserSchema.methods.gravatar = function() {
+  if (!this.email) return 'https://gravatar.com/avatar/?s=200&d=retro'
 
   const md5 = crypto.createHash('md5').update(this.email).digest('hex')
   return `https://gravatar.com/avatar/${md5}?s=200&d=retro`
 }
 
-module.exports = mongoose.model('User', UserSchema)
+export default mongoose.model('User', UserSchema)

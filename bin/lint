@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Run script defined in package.json
+npm run lint
