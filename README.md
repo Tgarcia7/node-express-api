@@ -1,8 +1,3 @@
-# API RESTful
-
-Build with Node.js with Express Framework. Uses JWT for authentication.
-Created for academic purposes.
-
 # NODE-EXPRESS-API
 
 RESTful API written in Node.js and Express framework. It uses JWT for authentication.
